@@ -1,0 +1,35 @@
+Target_RNA_ID	Target_RNA_name	A	G	C	U
+Target_69	ADENINE RIBOSWITCH	0.25373	0.25373	0.23881	0.25373
+Target_70	Riboswitch	0.23267	0.27723	0.24752	0.24257
+Target_74	Guanine riboswitch	0.25373	0.25373	0.25373	0.23881
+Target_71	S_Adenosyl_methionine_riboswitch	0.30851	0.31915	0.2234	0.14894
+Target_72	thiamine_BOX_Riboswitch	0.225	0.3125	0.2375	0.225
+Target_73	B_subtilis_pbuE _Adenine riboswitch	0.35714	0.2	0.15714	0.28571
+Target_36	FMN RIBOSWITCH APTAMER	0.22857	0.37143	0.22857	0.17143
+Target_75	PreQ1_riboswitch_Fusobacterium	0.31081	0.17568	0.16216	0.35135
+Target_37	TPP RIBOSWITCH APTAMER	0.28	0.29	0.19	0.24
+Target_38	LYSINE RIBOSWITCH APTAMER	0.30126	0.24268	0.15063	0.30544
+Target_76	B.subtilis tenA TPP riboswitch	0.28	0.29	0.19	0.24
+Target_77	B.subtilis tenA FMN riboswitch	0.28485	0.32727	0.18182	0.20606
+Target_78	B.subtilis lysine riboswitch	0.30126	0.24268	0.15063	0.30544
+Target_189	165 ribD FMN Riboswitch Aptamer, B. subtilis	0.28485	0.32727	0.18182	0.20606
+Target_190	FMN Riboswitch Aptamer, E. Coli	0.27679	0.29464	0.16964	0.25893
+Target_191	FMN Riboswitch Aptamer SA1, S. Aureus	0.31535	0.21992	0.14523	0.3195
+Target_192	FMN Riboswitch Aptamer SA2, S. Aureus	0.27604	0.26562	0.16146	0.29688
+Target_193	FMN Riboswitch, S. Davawensis	0.19205	0.37748	0.29139	0.13907
+Target_194	TPP Riboswitch, B. Subtilis	0.28	0.29	0.19	0.24
+Target_195	108 nt yjdF Riboswitch Construct, B. subtilis, Mutant 1	0.27778	0.2037	0.2037	0.31481
+Target_228	C. difficile guaA riboswitch	0.25	0.26471	0.23529	0.25
+Target_229	lysC riboswitch	0.30544	0.23849	0.15063	0.30544
+Target_230	lysC riboswitch mutant 1 (M2)	0.29832	0.2437	0.15126	0.30672
+Target_352	Fusibacterium ulcerans ZTP riboswitch	0.32	0.25333	0.2	0.22667
+Target_405	B.subtilis cysH	0.26829	0.22561	0.20732	0.29878
+Target_406	B.anthracis cysH	0.34375	0.24375	0.1625	0.25
+Target_412	Tetracycline riboswitch A08G mutant	0.28169	0.25352	0.29577	0.16901
+Target_413	Tetracycline riboswitch A09G mutant	0.28169	0.25352	0.29577	0.16901
+Target_414	Tetracycline riboswitch A13U mutant	0.28169	0.23944	0.29577	0.1831
+Target_415	Tetracycline riboswitch A50U mutant	0.28169	0.23944	0.29577	0.1831
+Target_416	Tetracycline riboswitch G51U mutant	0.29577	0.22535	0.29577	0.1831
+Target_417	Tetracycline riboswitch U54G mutant	0.29577	0.25352	0.29577	0.15493
+Target_418	Tetracycline riboswitch A55G mutant	0.28169	0.25352	0.29577	0.16901
+Target_411	Tetracycline riboswitch	0.29577	0.23944	0.29577	0.16901
