@@ -10,7 +10,7 @@ for dataset in ["Robin","Biosensor"]:
 
     with open(dataset_path,'rb') as f:
         data = pickle.load(f)
-        
+
     RNA_repre,Mol_graph,RNA_Graph,RNA_feats,RNA_C4_coors,RNA_coors,Mol_feats,Mol_coors,LAS_input, y_true = data
     interaction_data = pd.DataFrame(index=range(len(data[0])), columns=["rna","mol","label"])
 
@@ -31,11 +31,14 @@ for dataset in ["Robin","Biosensor"]:
             rna_data[4].append(data[5][index])
             
             for i in range(index, len(data[0])):
+
                 if data[0][i].shape==reference_RNA_rep.shape:
+
                     if (data[0][i]==reference_RNA_rep).all():
                         interaction_data.loc[i]["rna"] = rna_index
                         interaction_data.loc[i]["label"] = data[9][i]
                         already_visited_RNA.append(i)
+
             rna_index += 1
 
     already_visited_SM = []
@@ -61,10 +64,12 @@ for dataset in ["Robin","Biosensor"]:
 
     # Store RNA data in a pkl file
     with open(f'data/{dataset}/{dataset}_RNA.pkl', 'wb') as file:
-        pickle.dump(data, file)
+        pickle.dump(rna_data, file)
+
     # Store small molecule data in a pkl file
     with open(f'data/{dataset}/{dataset}_Mol.pkl', 'wb') as file:
-        pickle.dump(data, file)
+        pickle.dump(mol_data, file)
+
     # Store interaction data in a CSV file
     interaction_data.to_csv(f'data/{dataset}/{dataset}_interaction.csv')
     
