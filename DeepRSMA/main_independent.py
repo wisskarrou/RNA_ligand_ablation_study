@@ -1,7 +1,6 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
 import os
-import torch
 from data import RNA_dataset, Molecule_dataset, RNA_dataset_independent, Molecule_dataset_independent, WordVocab
 from model import RNA_feature_extraction, GNN_molecule, mole_seq_model, cross_attention
 from torch_geometric.loader import DataLoader
@@ -17,7 +16,7 @@ torch.set_printoptions(profile="full")
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-hidden_dim = 16
+hidden_dim = 128
 
 EPOCH = 200
 RNA_type = 'Viral_RNA_independent'
@@ -158,10 +157,10 @@ test_dataset = CustomDualDataset(rna_dataset_in, molecule_dataset_in)
 
 
 train_loader = DataLoader(
-    train_dataset, batch_size=8, num_workers=1, drop_last=False, shuffle=False
+    train_dataset, batch_size=16, num_workers=0, drop_last=False, shuffle=False
 )
 test_loader = DataLoader(
-    test_dataset, batch_size=1, num_workers=1, drop_last=False, shuffle=False
+    test_dataset, batch_size=1, num_workers=0, drop_last=False, shuffle=False
 )
 
 
@@ -172,7 +171,8 @@ model.to(device)
 y_pred_all = []
 max_p = -1
 
-optimizer = optim.Adam(model.parameters(), lr=6e-5 , weight_decay=1e-5)
+#optimizer = optim.Adam(model.parameters(), lr=6e-5 , weight_decay=1e-5)
+optimizer = optim.Adam(model.parameters(), lr=5e-4 , weight_decay=1e-7)
 optimal_loss = 1e10
 loss_fct = torch.nn.MSELoss()
 for epoch in range(0,EPOCH):
@@ -212,7 +212,7 @@ for epoch in range(0,EPOCH):
             print(' ')
             print('Best:', 'epo:',epoch, 'pcc:',p[0],'scc: ',s[0],'rmse:',rmse)
 
-            torch.save(model.state_dict(), 'save/' + 'model_independent_'+str(seed)+'.pth')
+            torch.save(model.state_dict(), 'save/' + 'model_independent_'+str(seed)+'_paper_weights.pth')
 
         
         model.train()

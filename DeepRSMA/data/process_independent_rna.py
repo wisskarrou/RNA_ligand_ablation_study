@@ -21,13 +21,13 @@ class RNA_dataset_independent(InMemoryDataset):
                  pre_filter=None):
         root = "dataset/rna_independent/"
 
-        csv_file_path_qsar = 'independent_data.csv'
+        csv_file_path_qsar = 'data/independent_data.csv'
 
         # 使用pandas读取CSV文件
         self.df_qsar = pd.read_csv(csv_file_path_qsar, delimiter=',')
 
         
-        self.concat_folder_path_qsar = 'data/RNA_contact/qsar' 
+        self.concat_folder_path_qsar = 'data/RNA_contact/qsar'
         self.emb_folder_path = 'data/representations_independent'
         self.emb_file_path_qsar = os.path.join(self.emb_folder_path, "hiv.npy")
 

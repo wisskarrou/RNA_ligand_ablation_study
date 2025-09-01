@@ -32,7 +32,7 @@ class GCNNet(torch.nn.Module):
         self.n_output = n_output
         self.drug1_conv1 = GCNConv(num_features_xd, num_features_xd)
         self.drug1_conv2 = GCNConv(num_features_xd, num_features_xd*3)
-        self.drug1_conv3 = GCNConv(num_features_xd*3, 128)
+        self.drug1_conv3 = GCNConv(num_features_xd*3, self.n_output)
 
         
         self.fc_g1 = torch.nn.Linear(128, 1024)

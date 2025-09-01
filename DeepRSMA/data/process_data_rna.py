@@ -7,15 +7,16 @@ import numpy as np
 from torch_geometric.data import Data
 
 class RNA_dataset(InMemoryDataset):
-    def __init__(self,
-                 RNA_type,
-                 root="dataset/rna",
-                 transform=None,
-                 pre_transform=None,
-                 pre_filter=None):
+    def __init__(
+        self,
+        RNA_type,
+        root="dataset/rna",
+        transform=None,
+        pre_transform=None,
+        pre_filter=None
+    ):
         
         root = "dataset/rna/" + RNA_type
-            
 
         # All RNA or 6 RNA subtype: All_sf; Aptamers; miRNA; Repeats; Ribosomal; Riboswitch; Viral_RNA;
         csv_file_path = 'data/RSM_data/' + RNA_type + '_dataset_v1.csv'  
@@ -36,13 +37,9 @@ class RNA_dataset(InMemoryDataset):
         super().__init__(root, transform, pre_transform, pre_filter)
         self.data, self.slices = torch.load(self.processed_paths[0])
         
-        
-
-
     @property
     def processed_file_names(self):
         return "data_rna.pt"
-
 
     def process(self):
 
@@ -59,6 +56,7 @@ class RNA_dataset(InMemoryDataset):
                 file_path = os.path.join(self.concat_folder_path[i], f"{id_value}.prob_single")
                 if os.path.exists(file_path):
                     break
+
             if os.path.exists(file_path):
                 matrix = np.loadtxt(file_path)
                 # contact map

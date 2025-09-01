@@ -8,6 +8,7 @@ import pandas as pd
 import sys
 import os
 import torch
+torch.set_default_dtype(torch.float32)
 from torch import nn
 import torch.nn.functional as F
 from torch_geometric.data import Data
@@ -28,7 +29,7 @@ class Test_dataset(data.Dataset):
     def __init__(self, path):
         with open(path,'rb') as f:
             self.data = pickle.load(f)
-        self.RNA_repre,self.Mol_graph,self.RNA_Graph,self.RNA_feats,self.RNA_C4_coors,self.RNA_coors,self.Mol_feats,self.Mol_coors,self.LAS_input = self.data
+        self.RNA_repre,self.Mol_graph,self.RNA_Graph,self.RNA_feats,self.RNA_C4_coors,self.RNA_coors,self.Mol_feats,self.Mol_coors,self.LAS_input, _ = self.data
         
     def __len__(self):
         return len(self.RNA_repre)
@@ -89,9 +90,9 @@ def custom_collate_fn(batch):
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else  "cpu")
 
-test_data = Test_dataset("data/new_data.pkl")
+test_data = Test_dataset("data/Robin/Robin_all_data_3_coors_C4.pkl")
 
 all_data_index = [ i for i in range(len(test_data)) ]
 
@@ -107,7 +108,7 @@ model_path = "Model/Robin_Model_baseline.pth"
 net = GerNA(params, trigonometry = True, rna_graph = True, coors = True, coors_3_bead = True, uncertainty=True)
 
 if os.path.exists(model_path):
-    pretrained_dict = torch.load(model_path,map_location="cuda")
+    pretrained_dict = torch.load(model_path,map_location="cpu")
     model_dict = net.state_dict()
     pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
     model_dict.update(pretrained_dict)

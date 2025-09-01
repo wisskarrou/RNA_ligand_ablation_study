@@ -64,12 +64,14 @@ smilebet = Smiles()
 
 
 class Molecule_dataset(InMemoryDataset):
-    def __init__(self,
-                 RNA_type,
-                 root="dataset/small_molecule/",
-                 transform=None,
-                 pre_transform=None,
-                 pre_filter=None):
+    def __init__(
+        self,
+        RNA_type,
+        root="dataset/small_molecule/",
+        transform=None,
+        pre_transform=None,
+        pre_filter=None
+    ):
         root = "dataset/small_molecule/" + RNA_type
        
 

@@ -20,7 +20,7 @@ class CNN(torch.nn.Module):
         self.relu = nn.ReLU()
         
         self.line1 =  nn.Linear(64, 512)
-        self.line2 =  nn.Linear(512, 128)
+        self.line2 =  nn.Linear(512, hidden_size)
         
         self.dropout = nn.Dropout(0.2)
 
