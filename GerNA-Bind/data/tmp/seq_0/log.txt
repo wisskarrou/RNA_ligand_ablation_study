@@ -1,0 +1,15 @@
+2025-06-26 10:56:53,483 - INFO: Constructing RhoFold
+2025-06-26 10:56:53,891 - INFO:     downloading /Users/wissam/RhoFold/pretrained/RhoFold_pretrained.pt
+2025-06-26 10:57:11,159 - INFO:     loading /Users/wissam/RhoFold/pretrained/RhoFold_pretrained.pt
+2025-06-26 10:57:11,506 - INFO: Input_fas ./data/tmp/seq_0/temp.fasta
+2025-06-26 10:57:11,506 - INFO: Input_a3m is None, the modeling will run using single sequence only (input_fas)
+2025-06-26 10:57:11,506 - INFO: Started RhoFold Inference
+2025-06-26 10:57:11,506 - INFO:     Inference using device cpu
+2025-06-26 10:57:21,667 - INFO:     Export PDB file to ./data/tmp/seq_0/unrelaxed_model.pdb
+2025-06-26 10:57:21,668 - INFO: Finished RhoFold Inference in 10.162 seconds
+2025-06-26 10:57:21,668 - INFO: Started Amber Relaxation : 1000 iterations
+2025-06-26 10:57:21,668 - INFO:     AmberRelaxation: Using OpenCL
+2025-06-26 10:57:28,373 - INFO:     Minimizing ...
+2025-06-26 11:05:19,204 - INFO:     Energy at Minima is -304569.592 kcal/mol
+2025-06-26 11:05:19,248 - INFO:     Export PDB file to ./data/tmp/seq_0/relaxed_1000_model.pdb
+2025-06-26 11:05:19,248 - INFO: Finished Amber Relaxation : 1000 iterations in 477.580 seconds
