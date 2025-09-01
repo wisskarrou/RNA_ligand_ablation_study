@@ -94,6 +94,12 @@ def eval_aurocs():
         "none": identity,
     }
 
+<<<<<<< HEAD
+=======
+    distributions = {}
+
+    data_root = "data"
+>>>>>>> 47b11bba97c227d19850869a1c2ce20dab66d1fc
     rows = []
     seeds = [0, 1, 2]
 
