@@ -10,19 +10,20 @@ sys.path.insert(0, current_dir)
 global_df_path = os.path.join(current_dir,"ROBIN_data.csv")
 simplified_global_df = pd.read_csv(global_df_path)
 
-for i  in range(len(simplified_global_df)):
+#for i  in range(len(simplified_global_df)):
+for i  in range(2):
     data = {
         "version": 1,
         "sequences": [
             {
                 "rna": {
-                    "id": simplified_global_df["RNA_target"].iloc[i],
+                    "id": "A",
                     "sequence": simplified_global_df["RNA_target_sequence"].iloc[i]
                 },
             },
             {
                 "ligand": {
-                    "id": simplified_global_df["ligand"].iloc[i],
+                    "id": "B",
                     "smiles": simplified_global_df["ligand_smile"].iloc[i]
                 }
             },
@@ -30,11 +31,11 @@ for i  in range(len(simplified_global_df)):
         "properties": [
             {
                 "affinity": {
-                    "binder": simplified_global_df["ligand"].iloc[i]
+                    "binder": "B"
                 }
             }
         ]
     }
 
-    with open(os.path.join(current_dir,f'../robin_data/couple_{i}.yaml'), 'w') as file:
+    with open(os.path.join(current_dir,f'../robin_data_example/couple_{simplified_global_df["RNA_target"].iloc[i]}_{simplified_global_df["ligand"].iloc[i]}.yaml'), 'w') as file:
         yaml.dump(data, file, default_flow_style=False)
