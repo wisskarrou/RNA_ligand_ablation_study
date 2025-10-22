@@ -2,7 +2,6 @@ name: py37
 channels:
   - conda-forge
   - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
-  - http://mirrors.aliyun.com/anaconda/pkgs/main
   - defaults
 dependencies:
   - _libgcc_mutex=0.1=conda_forge
@@ -97,7 +96,7 @@ dependencies:
       - decorator==5.1.1
       - deepchem==2.7.1
       - deeppurpose==0.1.5
-      - dgl==1.1.2+cu116
+      - dgl==1.1.2
       - dglgo==0.0.2
       - dgllife==0.3.2
       - dill==0.3.6
@@ -223,7 +222,6 @@ dependencies:
       - sentry-sdk==1.41.0
       - setproctitle==1.3.3
       - six==1.16.0
-      - sklearn==0.0.post10
       - smart-open==7.0.1
       - smmap==5.0.1
       - snowballstemmer==2.2.0

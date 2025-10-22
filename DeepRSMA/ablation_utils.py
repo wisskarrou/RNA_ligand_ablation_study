@@ -17,7 +17,7 @@ class CustomDualDataset(Dataset):
         return len(self.dataset1)  
 
 def identity(rna_dataset, mol_dataset, seed=0):
-    return rna_dataset, mol_dataset
+    return [rna for rna in rna_dataset], [mol for mol in mol_dataset]
 
 def target_swap(rna_dataset, mol_dataset, seed=0):
     rna_initial_mapping = [None for rna in rna_dataset]
@@ -40,9 +40,9 @@ def target_swap(rna_dataset, mol_dataset, seed=0):
     for i, d in enumerate(rna_dataset):
         new_RNA = rna_dataset[RNA_swap[i]]
         dset_new.append(
-            Data(x=new_RNA.x, edge_index=new_RNA.edge_index, y=d.y, t_id=new_RNA.T_id, e_id=new_RNA.E_id, emb=new_RNA.rna_emb, rna_len = new_RNA.rna_len)
+            Data(x=new_RNA.x, edge_index=new_RNA.edge_index, y=d.y, t_id=new_RNA.t_id, e_id=new_RNA.e_id, emb=new_RNA.emb, rna_len = new_RNA.rna_len)
         )
-    return dset_new, mol_dataset
+    return dset_new, [mol for mol in mol_dataset]
 
 
 
@@ -65,4 +65,4 @@ def ligand_swap(rna_dataset, mol_dataset, seed=0):
     dset_new = []
     for i, d in enumerate(mol_dataset):
         dset_new.append(mol_dataset[mol_swap[i]])
-    return rna_dataset, dset_new
+    return [rna for rna in rna_dataset], dset_new

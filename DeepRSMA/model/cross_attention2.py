@@ -8,7 +8,6 @@ import copy
 import math
 import collections
 
-
 class cross_attention(nn.Sequential):
     def __init__(self, hidden_dim):
         super(cross_attention, self).__init__()
@@ -31,8 +30,11 @@ class cross_attention(nn.Sequential):
         global device
         device = device1
 
+
         encoded_layers, attention_scores = self.encoder(emb, ex_e_mask)
         return encoded_layers, attention_scores
+
+
 
 
 class LayerNorm(nn.Module):
@@ -69,9 +71,9 @@ class Embeddings(nn.Module):
         return embeddings
     
 
-class CrossFusion(nn.Module):
+class SelfAttention(nn.Module):
     def __init__(self, hidden_size, num_attention_heads, attention_probs_dropout_prob):
-        super(CrossFusion, self).__init__()
+        super(SelfAttention, self).__init__()
         if hidden_size % num_attention_heads != 0:
             raise ValueError(
                 "The hidden size (%d) is not a multiple of the number of attention "
@@ -127,35 +129,36 @@ class CrossFusion(nn.Module):
         key_layer_mole = self.transpose_for_scores(mixed_key_layer_mole)
         value_layer_mole = self.transpose_for_scores(mixed_value_layer_mole)
 
-        # mole as query, rna as key,value
-        attention_scores_mole = torch.matmul(query_layer_mole, key_layer_rna.transpose(-1, -2))
+        # rna as query, mole as key,value
+        attention_scores_mole = torch.matmul(query_layer_rna, key_layer_mole.transpose(-1, -2))
         attention_scores_mole = attention_scores_mole / math.sqrt(self.attention_head_size)
-        attention_scores_mole = attention_scores_mole + rna_mask
+        attention_scores_mole = attention_scores_mole + mole_mask
         attention_probs_mole = nn.Softmax(dim=-1)(attention_scores_mole)
         attention_probs_mole = self.dropout(attention_probs_mole)
         
-        context_layer_mole = torch.matmul(attention_probs_mole, value_layer_rna)
+        context_layer_mole = torch.matmul(attention_probs_mole, value_layer_mole)
         context_layer_mole = context_layer_mole.permute(0, 2, 1, 3).contiguous()
         new_context_layer_shape_mole = context_layer_mole.size()[:-2] + (self.all_head_size,)
         context_layer_mole = context_layer_mole.view(*new_context_layer_shape_mole)
         
-        # rna as query, mole as key,value
-        attention_scores_rna = torch.matmul(query_layer_rna, key_layer_mole.transpose(-1, -2))
+        # mole as query, rna as key,value
+        attention_scores_rna = torch.matmul(query_layer_mole, key_layer_rna.transpose(-1, -2))
         attention_scores_rna = attention_scores_rna / math.sqrt(self.attention_head_size)
-        attention_scores_rna = attention_scores_rna + mole_mask
+        attention_scores_rna = attention_scores_rna + rna_mask
         attention_probs_rna = nn.Softmax(dim=-1)(attention_scores_rna)
         attention_probs_rna = self.dropout(attention_probs_rna)
         
-        context_layer_rna = torch.matmul(attention_probs_rna, value_layer_mole)
+        context_layer_rna = torch.matmul(attention_probs_rna, value_layer_rna)
         context_layer_rna = context_layer_rna.permute(0, 2, 1, 3).contiguous()
         new_context_layer_shape_rna = context_layer_rna.size()[:-2] + (self.all_head_size,)
         context_layer_rna = context_layer_rna.view(*new_context_layer_shape_rna)
         
-        # output of cross fusion
-        context_layer = [context_layer_rna, context_layer_mole]
-        # attention of cross fusion
-        attention_probs = [attention_probs_rna, attention_probs_mole]
-
+        context_layer = [ context_layer_mole ,context_layer_rna]
+        attention_probs = [attention_probs_mole,attention_probs_rna ]
+        
+        # rna_m = rna_m*attention_probs_rna
+ 
+                
         return context_layer, attention_probs
     
 
@@ -183,7 +186,7 @@ class SelfOutput(nn.Module):
 class Attention(nn.Module):
     def __init__(self, hidden_size, num_attention_heads, attention_probs_dropout_prob, hidden_dropout_prob):
         super(Attention, self).__init__()
-        self.self = CrossFusion(hidden_size, num_attention_heads, attention_probs_dropout_prob)
+        self.self = SelfAttention(hidden_size, num_attention_heads, attention_probs_dropout_prob)
         self.output = SelfOutput(hidden_size, hidden_dropout_prob)
 
     def forward(self, input_tensor, attention_mask):
@@ -250,40 +253,13 @@ class Encoder_1d(nn.Module):
                         attention_probs_dropout_prob, hidden_dropout_prob)
         self.layer = nn.ModuleList([copy.deepcopy(layer) for _ in range(n_layer)])
         
-        # 1: rna_seq; 2: rna_stru; 3: mole_seq; 4: mole_stru
-        # self.cls = nn.Embedding(5, hidden_size,padding_idx=0)
-        
-        # modality embedding; 0 for seq; 1 for stru;
+
         self.mod = nn.Embedding(2, hidden_size)
-        
-        # # mole type embedding; 0 for rna; 1 for small mole
-        # self.type_e = nn.Embedding(2, 256)
+
         
     
 
     def forward(self, hidden_states, attention_mask, output_all_encoded_layers=True):
-        # add 1 for mask
-        # attention_mask[0] = torch.cat((torch.ones(attention_mask[0].size()[0]).unsqueeze(1).to(device), attention_mask[0]), dim=1).to(device)
-        # attention_mask[1] = torch.cat((torch.ones(attention_mask[1].size()[0]).unsqueeze(1).to(device), attention_mask[1]), dim=1).to(device)
-        # attention_mask[2] = torch.cat((torch.ones(attention_mask[2].size()[0]).unsqueeze(1).to(device), attention_mask[2]), dim=1).to(device)
-        # attention_mask[3] = torch.cat((torch.ones(attention_mask[3].size()[0]).unsqueeze(1).to(device), attention_mask[3]), dim=1).to(device)
-        
-        # cls_rna_seq = torch.tensor([1]).expand(hidden_states[0].size()[0],1).to(device)
-        # cls_rna_seq = self.cls(cls_rna_seq)
-        # hidden_states[0] = torch.cat((cls_rna_seq, hidden_states[0]),dim=1)
-        
-        # cls_rna_stru = torch.tensor([2]).expand(hidden_states[1].size()[0],1).to(device)
-        # cls_rna_stru = self.cls(cls_rna_stru)
-        # hidden_states[1] = torch.cat((cls_rna_stru, hidden_states[1]),dim=1)
-       
-        # cls_mole_seq = torch.tensor([3]).expand(hidden_states[2].size()[0],1).to(device)
-        # cls_mole_seq = self.cls(cls_mole_seq)
-        # hidden_states[2] = torch.cat((cls_mole_seq, hidden_states[2]),dim=1)
-        
-        # cls_mole_stru = torch.tensor([4]).expand(hidden_states[3].size()[0],1).to(device)
-        # cls_mole_stru = self.cls(cls_mole_stru)
-        # hidden_states[3] = torch.cat((cls_mole_stru, hidden_states[3]),dim=1)
-
 
         # for seq
         seq_rna_emb1 = torch.tensor([0]).expand(hidden_states[0].size()[0],hidden_states[0].size()[1]).to(device)
@@ -302,24 +278,7 @@ class Encoder_1d(nn.Module):
         stru_mole_emb1 = torch.tensor([1]).expand(hidden_states[3].size()[0],hidden_states[3].size()[1]).to(device)
         stru_mole_emb1 = self.mod(stru_mole_emb1)
         hidden_states[3] = hidden_states[3] + stru_mole_emb1
-        
-        # # for rna
-        # seq_rna_emb2 = torch.tensor([0]).expand(hidden_states[0].size()[0],hidden_states[0].size()[1]).to(device)
-        # seq_rna_emb2 = self.type_e(seq_rna_emb2)
-        # hidden_states[0] = hidden_states[0] + seq_rna_emb2
-        
-        # stru_rna_emb2 = torch.tensor([0]).expand(hidden_states[2].size()[0],hidden_states[2].size()[1]).to(device)
-        # stru_rna_emb2 = self.type_e(stru_rna_emb2)
-        # hidden_states[2] = hidden_states[2] + stru_rna_emb2
-        
-        # # for small mole
-        # seq_mole_emb2 = torch.tensor([1]).expand(hidden_states[1].size()[0],hidden_states[1].size()[1]).to(device)
-        # seq_mole_emb2 = self.type_e(seq_mole_emb2)
-        # hidden_states[1] = hidden_states[1] + seq_mole_emb2
-        
-        # stru_mole_emb2 = torch.tensor([1]).expand(hidden_states[3].size()[0],hidden_states[3].size()[1]).to(device)
-        # stru_mole_emb2 = self.type_e(stru_mole_emb2)
-        # hidden_states[3] = hidden_states[3] + stru_mole_emb2
+
         rna_hidden = torch.cat((hidden_states[0], hidden_states[1]), dim=1)
         mole_hidden = torch.cat((hidden_states[2], hidden_states[3]), dim=1)
         

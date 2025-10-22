@@ -57,8 +57,7 @@ def run_ablations():
     }
 
     rows = []
-    seeds = [0, 1, 2]
-
+    seeds = [2]
     RNA_type = 'All_sf'
     rna_dataset = RNA_dataset(RNA_type)
     molecule_dataset = Molecule_dataset(RNA_type)
@@ -92,7 +91,7 @@ def run_ablations():
                     )
                     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
                     model = DeepRSMA(hidden_dim=128)
-                    model_path = 'save/' + 'model_blind_'+str(cold_type)+'2_'+str(fold)+'_2.pth'
+                    model_path = f'save/model5fold_{RNA_type}{seed}_{fold}_{seed}.pth'
                     if os.path.exists(model_path):
 
                         pretrained_dict = torch.load(model_path,map_location="cuda:0" if torch.cuda.is_available() else "cpu")

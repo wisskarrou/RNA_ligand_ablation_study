@@ -6,13 +6,14 @@ from torch.autograd import Variable
 import numpy as np
 import copy
 import math
+import collections
 
 # Transformer encoder
 class transformer_1d(nn.Sequential):
     def __init__(self, hidden_size):
         super(transformer_1d, self).__init__()
+        input_dim_drug = 2586 + 1 
         transformer_emb_size_drug = hidden_size
-        # transformer_dropout_rate = 0.1
         transformer_n_layer_drug = 4
         transformer_intermediate_size_drug = hidden_size
         transformer_num_attention_heads_drug = 4
@@ -95,11 +96,11 @@ class Embeddings(nn.Module):
     def __init__(self, vocab_size, hidden_size, max_position_size, dropout_rate):
         super(Embeddings, self).__init__()
         self.word_embeddings = nn.Embedding(vocab_size, hidden_size)
-        # self.position_embeddings = nn.Embedding(max_position_size, hidden_size)
         self.LayerNorm = LayerNorm(hidden_size)
         self.dropout = nn.Dropout(dropout_rate)
 
-    def forward(self, input_ids):     
+    def forward(self, input_ids):
+
         words_embeddings = self.word_embeddings(input_ids)
         embeddings = words_embeddings
         embeddings = self.LayerNorm(embeddings)

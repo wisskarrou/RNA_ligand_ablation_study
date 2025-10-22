@@ -16,9 +16,9 @@ num_bond_stereo = 6
 num_bond_direction = 3
 
 
-# Mole Gra
+# GCN based model
 class GCNNet(torch.nn.Module):
-    def __init__(self, n_output=2, emb_dim=78,num_features_xd=78, dropout=0.2):
+    def __init__(self, hidden_dim ,n_output=2, n_filters=32, emb_dim=78,num_features_xd=78, num_features_xt=954, output_dim=1, dropout=0.2):
 
         super(GCNNet, self).__init__()
         
@@ -27,14 +27,12 @@ class GCNNet(torch.nn.Module):
 
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(dropout)
-        
-        # GCN
+        # SMILES1 graph branch
         self.n_output = n_output
         self.drug1_conv1 = GCNConv(num_features_xd, num_features_xd)
         self.drug1_conv2 = GCNConv(num_features_xd, num_features_xd*3)
-        self.drug1_conv3 = GCNConv(num_features_xd*3, self.n_output)
+        self.drug1_conv3 = GCNConv(num_features_xd*3, hidden_dim)
 
-        
         self.fc_g1 = torch.nn.Linear(128, 1024)
         self.fc_g2 = torch.nn.Linear(1024, 128)
         
@@ -42,6 +40,7 @@ class GCNNet(torch.nn.Module):
         self.dropout = nn.Dropout(0.2)
     def forward(self, data1):
         x1, edge_index1, batch1 = data1.x, data1.edge_index, data1.batch
+        # deal drug1
         x1 = self.x_embedding1(x1[:, 0].int()) + self.x_embedding2(x1[:, 1].int())
  
         x1 = self.drug1_conv1(x1, edge_index1)
@@ -53,7 +52,12 @@ class GCNNet(torch.nn.Module):
         x1 = self.drug1_conv3(x1, edge_index1)
         x1 = self.relu(x1)
 
-        # graph representation
         emb = global_mean_pool(x1, data1.batch)
 
+
+
         return x1, emb
+
+
+
+
