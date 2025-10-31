@@ -56,7 +56,17 @@ class GerNA_dataset2(data.Dataset):
         subset_rna_data = np.array(self.rna_data)[:,subset_rna_indices].tolist()
         subset_mol_indices = list(subset_interaction_data['mol'].unique())
         subset_mol_data = np.array(self.mol_data)[:,subset_mol_indices].tolist()
-        subset = GerNA_dataset2(rna_data=subset_rna_data, mol_data=subset_mol_data, interaction_data=subset_interaction_data)
+        rna_mapping_dict = {
+            old_index: new_index
+            for new_index, old_index in enumerate(subset_rna_indices)
+        }
+        mol_mapping_dict = {
+            old_index: new_index
+            for new_index, old_index in enumerate(subset_mol_indices)
+        }
+        subset_interaction_data['rna'] = subset_interaction_data['rna'].map(rna_mapping_dict)
+        subset_interaction_data['mol'] = subset_interaction_data['mol'].map(mol_mapping_dict)
+        subset = GerNA_dataset2(rna_data = subset_rna_data, mol_data = subset_mol_data, interaction_data = subset_interaction_data)
         return subset
 
     def __getitem__(self, index):
@@ -71,7 +81,7 @@ class GerNA_dataset_from_pkl(GerNA_dataset2):
         with open(mol_dataset_path, 'rb') as f:
             self.mol_data = pickle.load(f)
         self.interaction_data = pd.read_csv(interaction_dataset_path)
-        super().__init__(rna_data=self.rna_data, mol_data=self.mol_data, interaction_data=self.interaction_data)
+        super().__init__(rna_data = self.rna_data, mol_data = self.mol_data, interaction_data = self.interaction_data)
 
 def custom_collate_fn(batch):
     batch_RNA_repre = []

@@ -18,6 +18,7 @@ import argparse
 import pandas as pd
 import json
 from sklearn.model_selection import KFold
+import random
 
 # from metrics import get_cindex, get_rm2
 from train_model import test
@@ -29,7 +30,7 @@ from utils.ablation_utils import target_swap, ligand_swap
 
 def val(model, dataloader, device):
 
-    test_performance, label, pred = test(net=model, dataLoader=dataloader, batch_size=8, mode="test", device=device, threshold = 0)
+    test_performance, label, pred = test(net=model, dataLoader=dataloader, batch_size=8, mode="test", device=device, threshold = 0.5)
 
     acc = test_performance[7]
     sen = test_performance[5]
@@ -56,36 +57,44 @@ def get_indices(dataset, split_method, split):
     all_data_index = [ i for i in range(len(my_Dataset)) ]
 
     if split_method == 'random':
+
         kfold = KFold(n_splits=5, shuffle=True)
         _, indices = next(kfold.split(all_data_index))
 
     elif split_method == 'RNA':
+
         with open("data/"+dataset+"/"+dataset+"_"+split_method+".json", "r") as json_file:
+
             json_data = json.load(json_file)
             indices = json_data[split]
 
     elif split_method == 'mol':
+
         with open("data/"+dataset+"/"+dataset+"_"+split_method+".json", "r") as json_file:
+
             json_data = json.load(json_file)
             indices = json_data[split]
 
     elif split_method == 'both':
+
         with open("data/"+dataset+"/"+dataset+"_RNA.json", "r") as json_file:
+
             json_data_RNA = json.load(json_file)
-            indices_rna = json_data[split]
+            indices_rna = json_data_RNA[split]
 
         with open("data/"+dataset+"/"+dataset+"_mol.json", "r") as json_file:
-            json_data_mol = json.load(json_file)
-            indices_mol = json_data[split]
 
-            indices = list( set(indices_rna).intersection(set(indices_mol)) )
+            json_data_mol = json.load(json_file)
+            indices_mol = json_data_mol[split]
+
+        indices = list(set(indices_rna).intersection(set(indices_mol)) )
 
     return indices
     
 
 def eval_aurocs():
     # Add argument
-    datasets = ["Biosensor", "Robin"]
+    datasets = ["Robin","Biosensor"]
     splits = ["random", "RNA", "mol", "both"]
 
     ablations = {
@@ -94,14 +103,10 @@ def eval_aurocs():
         "none": identity,
     }
 
-<<<<<<< HEAD
-=======
-    distributions = {}
-
-    data_root = "data"
->>>>>>> 47b11bba97c227d19850869a1c2ce20dab66d1fc
     rows = []
     seeds = [0, 1, 2]
+
+    df_inference_list = []
 
     for dataset in datasets:
 
@@ -121,8 +126,15 @@ def eval_aurocs():
 
                 for seed in seeds:
 
+                    print(dataset)
+                    print(split_method)
+                    print(ablation_name)
+                    inds = random.sample(list(range(test_set.RNA_counts())), test_set.RNA_counts())
+                    print(f"inds={inds}")
+                    rna_indices = test_set.interaction_data["rna"]
+                    print(f"rna_indices={rna_indices}")
                     test_set = ablation(test_set, seed=seed)
-                    test_loader = torch.utils.data.DataLoader(test_set, batch_size=8, collate_fn=custom_collate_fn, num_workers=10, pin_memory=True)
+                    test_loader = torch.utils.data.DataLoader(test_set, batch_size=1, collate_fn=custom_collate_fn, num_workers=4, pin_memory=True)
                     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
                     params = [4, 2, 128, 128]
                     model = GerNA(params, trigonometry = True, rna_graph = True, coors = True, coors_3_bead = True, uncertainty=True)
@@ -149,6 +161,24 @@ def eval_aurocs():
                         test_label,
                         test_pred,
                     ) = val(model, test_loader, device)
+
+                    
+                    probs = []
+                    for alpha in test_pred:
+                        probs.append(alpha[1] / alpha.sum())
+                    new_output_list = np.array(probs)
+                    new_output_list = new_output_list
+
+                    df_inference = test_set.interaction_data[["rna","mol"]].rename({"rna":"RNA_id","mol":"mol_id"}, axis = 1)
+                    df_inference["true_affinity"] = test_label.reshape(-1)
+                    df_inference["predicted_affinity"] = new_output_list.reshape(-1)
+                    df_inference = df_inference.assign(dataset=dataset)
+                    df_inference = df_inference.assign(ablation=ablation_name)
+                    df_inference = df_inference.assign(split_method=split_method)
+                    df_inference = df_inference.assign(seed=seed)
+
+                    df_inference_list.append(df_inference)
+
                     msg = (
                         "test_acc-%.4f, test_sen-%.4f, test_spe-%.4f, test_pre-%.4f, test_f1-%.4f, test_roauc-%.4f, test_prauc-%.4f, test_mcc-%.4f"
                         % (
@@ -174,7 +204,11 @@ def eval_aurocs():
                     )
                     print(rows)
 
-        df = pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+    
+    df_inference_global = pd.concat(df_inference_list, ignore_index=True)
+
+    df_inference_global.to_csv("inference_results.csv", index=False)
 
     pivot_table = pd.pivot_table(df, index=["dataset", "splitting"], values=["AuROC"], columns=["ablation"])
 
