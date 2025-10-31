@@ -32,10 +32,12 @@ from model import mole_and_rna
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 def val(model, test_loader, device):
+    df = pd.DataFrame(columns=["RNA_id","mol_id","true_affinity","predicted_affinity"])
     with torch.set_grad_enabled(False):
         model.eval()
         y_label = []
         y_pred = []
+
         for step, (batch_rna_test,batch_mole_test) in enumerate(test_loader):
 
             label = Variable(torch.from_numpy(np.array(batch_rna_test.y))).float()
@@ -45,19 +47,21 @@ def val(model, test_loader, device):
             label_ids = label.to('cpu').numpy()
             y_label = y_label + label_ids.flatten().tolist()
             y_pred = y_pred + logits.flatten().tolist()
+            df.loc[len(df)] = [batch_rna_test.t_id[0],int(batch_mole_test.e_id[0]),y_label[-1],y_pred[-1]]
+
     pcc_fold = pearsonr(y_label, y_pred)
     scc_fold = spearmanr(y_label, y_pred)
     rmse_fold = np.sqrt(mean_squared_error(y_label, y_pred))
-    return pcc_fold, scc_fold, rmse_fold
+    return pcc_fold, scc_fold, rmse_fold, df
 
 # stratified CV
 class regressor_stratified_cv:
-    def __init__(self,n_splits=10,n_repeats=2,group_count=10,random_state=0,strategy='quantile'):
-        self.group_count=group_count
-        self.strategy=strategy
-        self.cvkwargs=dict(n_splits=n_splits,n_repeats=n_repeats,random_state=random_state)  #Added shuffle here
-        self.cv=RepeatedStratifiedKFold(**self.cvkwargs)
-        self.discretizer=KBinsDiscretizer(n_bins=self.group_count,encode='ordinal',strategy=self.strategy)  
+    def __init__(self, n_splits = 10, n_repeats = 2, group_count = 10, random_state = 0, strategy='quantile'):
+        self.group_count = group_count
+        self.strategy = strategy
+        self.cvkwargs = dict(n_splits=n_splits,n_repeats=n_repeats,random_state=random_state)  #Added shuffle here
+        self.cv = RepeatedStratifiedKFold(**self.cvkwargs)
+        self.discretizer = KBinsDiscretizer(n_bins=self.group_count,encode='ordinal',strategy=self.strategy)  
             
     def split(self,X,y,groups=None):
         kgroups=self.discretizer.fit_transform(y[:,None])[:,0]
@@ -75,70 +79,84 @@ def run_ablations():
     }
 
     rows = []
-    seed = 2
+    ablation_seeds = [0, 1, 2]
+    split_seed = 2
     RNA_type = 'All_sf'
     rna_dataset = RNA_dataset(RNA_type)
     molecule_dataset = Molecule_dataset(RNA_type)
 
-
+    df_inference_list = []
 
     for ablation_name, ablation in ablations.items():
+            
+        for ablation_seed in ablation_seeds:
         
-        ablation_rna_dataset, ablation_molecule_dataset =  ablation(rna_dataset, molecule_dataset)
+            ablation_rna_dataset, ablation_molecule_dataset =  ablation(rna_dataset, molecule_dataset, ablation_seed)
 
-        # 5 fold
-        n_splits = 5
-        kf = regressor_stratified_cv(n_splits=n_splits, n_repeats=1, random_state=seed, group_count=5, strategy='uniform')
-        fold = 0
+            # 5 fold
+            n_splits = 5
+            kf = regressor_stratified_cv(n_splits=n_splits, n_repeats=1, random_state=split_seed, group_count=5, strategy='uniform')
+            fold = 0
 
-        for train_id,test_id in kf.split(rna_dataset, rna_dataset.y):
+            for train_id,test_id in kf.split(rna_dataset, rna_dataset.y):
 
-            fold += 1
-            print(f"test_id={test_id}")
-            test_dataset = CustomDualDataset([ablation_rna_dataset[i] for i in test_id], [ablation_molecule_dataset[i] for i in test_id])                    
-            test_loader = DataLoader(
-                test_dataset, batch_size=1, num_workers=1, drop_last=False, shuffle=False
-            )
-            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-            model = mole_and_rna(hidden_dim=128, device=device)
-            model_path = f'save/model5fold_{RNA_type}{seed}_{fold}_{seed}.pth'
-
-            if os.path.exists(model_path):
-
-                pretrained_dict = torch.load(model_path,map_location=device)
-                model_dict = model.state_dict()
-                pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-                model_dict.update(pretrained_dict)
-                model.load_state_dict(model_dict)
-
-            model = model.to(device)
-
-            pcc_fold, scc_fold, rmse_fold = val(model, test_loader, device)
-
-            pcc = pcc_fold[0]
-            scc = scc_fold[0]
-            rmse = rmse_fold
-            msg = (
-                "test_pcc-%.4f, test_scc-%.4f, test_rmse-%.4f"
-                % (
-                    pcc,
-                    scc,
-                    rmse,
+                fold += 1
+                print(f"test_id={test_id}")
+                test_dataset = CustomDualDataset([ablation_rna_dataset[i] for i in test_id], [ablation_molecule_dataset[i] for i in test_id])                    
+                test_loader = DataLoader(
+                    test_dataset, batch_size=1, num_workers=1, drop_last=False, shuffle=False
                 )
-            )
-            print(msg)
-            rows.append(
-                {
-                    "PCC": pcc,
-                    "SCC": scc,
-                    "RMSE": rmse,
-                    "ablation": ablation_name,
-                    "fold": fold,
-                }
-            )
-            print(rows)
+                device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+                model = mole_and_rna(hidden_dim=128, device=device)
+                model_path = f'save/model5fold_{RNA_type}{split_seed}_{fold}_{split_seed}.pth'
+
+                if os.path.exists(model_path):
+
+                    pretrained_dict = torch.load(model_path,map_location=device)
+                    model_dict = model.state_dict()
+                    pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+                    model_dict.update(pretrained_dict)
+                    model.load_state_dict(model_dict)
+
+                model = model.to(device)
+
+                pcc_fold, scc_fold, rmse_fold, df_inference = val(model, test_loader, device)
+
+                df_inference = df_inference.assign(ablation=ablation_name)
+                df_inference = df_inference.assign(fold=fold)
+                df_inference = df_inference.assign(seed=ablation_seed)
+                
+                df_inference_list.append(df_inference)
+
+                pcc = pcc_fold[0]
+                scc = scc_fold[0]
+                rmse = rmse_fold
+                msg = (
+                    "test_pcc-%.4f, test_scc-%.4f, test_rmse-%.4f"
+                    % (
+                        pcc,
+                        scc,
+                        rmse,
+                    )
+                )
+                print(msg)
+                rows.append(
+                    {
+                        "PCC": pcc,
+                        "SCC": scc,
+                        "RMSE": rmse,
+                        "ablation": ablation_name,
+                        "fold": fold,
+                        "seed": ablation_seed,
+                    }
+                )
+                print(rows)
 
     df = pd.DataFrame(rows)
+
+    df_inference_global = pd.concat(df_inference_list, ignore_index=True)
+
+    df_inference_global.to_csv("inference_results.csv", index=False)
 
     # Melt the dataframe to long format
     metrics = ['PCC', 'SCC', 'RMSE']
@@ -165,7 +183,7 @@ def run_ablations():
     latex_output = pivot_table.to_latex(
         escape=False,
         multirow=True,
-        caption="PCC results (mean ± std) across folds",
+        caption="PCC results (mean ± std) across folds and seeds",
         label="tab:ablation_results",
         position="htbp",
     )

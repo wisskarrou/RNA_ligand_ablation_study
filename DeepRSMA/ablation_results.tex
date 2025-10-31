@@ -2,14 +2,14 @@
 \centering
 \caption{PCC results (mean ± std) across folds}
 \label{tab:ablation_results}
-\begin{tabular}{llll}
+\begin{tabular}{lllllll}
 \toprule
-metric &                PCC &               RMSE &                SCC \\
-ablation    &                    &                    &                    \\
+{} &                PCC &                SCC &               RMSE &         PCC_target &         SCC_target &        RMSE_target \\
+ablation    &                    &                    &                    &                    &                    &                    \\
 \midrule
-ligand-swap &  $0.205 \pm 0.082$ &  $1.720 \pm 0.124$ &  $0.185 \pm 0.090$ \\
-none        &  $0.784 \pm 0.015$ &  $0.895 \pm 0.033$ &  $0.787 \pm 0.016$ \\
-target-swap &  $0.429 \pm 0.059$ &  $1.411 \pm 0.054$ &  $0.418 \pm 0.050$ \\
+ligand-swap &  $0.256 \pm 0.022$ &  $0.255 \pm 0.026$ &  $1.685 \pm 0.088$ &  $0.062 \pm 0.032$ &  $0.061 \pm 0.023$ &  $1.301 \pm 0.101$ \\
+none        &  $0.784 \pm 0.000$ &  $0.787 \pm 0.000$ &  $0.895 \pm 0.000$ &  $0.430 \pm 0.000$ &  $0.405 \pm 0.000$ &  $0.658 \pm 0.000$ \\
+target-swap &  $0.424 \pm 0.064$ &  $0.407 \pm 0.082$ &  $1.414 \pm 0.060$ &  $0.351 \pm 0.021$ &  $0.333 \pm 0.022$ &  $1.208 \pm 0.095$ \\
 \bottomrule
 \end{tabular}
 \end{table}
