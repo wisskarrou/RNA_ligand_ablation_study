@@ -1,0 +1,47 @@
+# general
+seed: 42
+result_dir: outputs/
+tune: false
+n_trials: 1
+
+#loader
+shuffle: True
+batch_size: 32
+num_workers: 0
+
+# dataset
+use_normalized_score: True # To use quantiles instead of scores
+stretch_scores: False # To put more emphasis on better scores
+group_pockets: True
+group_sample: False
+validation_systems: False
+use_rnamigos1_train: False
+use_rnamigos1_ligands: False
+filter_robin: False
+native_filter_pdb: False
+rnamigos1_split: -2
+simfunc: None
+simfunc_depth: 2
+max_kernel: 20
+
+# learning
+loss: 'l2'
+num_epochs: 100
+learning_rate: 1e-4
+pretrain_weight: 0.
+clf_lam: 1.0
+negative_pocket: 'none'
+bce_weight: 1.0
+reconstruction_lam: 1.0
+early_stop: 10
+target: dock # dock or native_fp or is_native
+weight_decay: 0
+rognan_margin: 0.6
+monitor_gap: false
+
+# Validation
+vs_every: 40
+vs_decoy_mode: 'pdb_chembl'
+do_rognan: True
+monitor_robin: True
+
