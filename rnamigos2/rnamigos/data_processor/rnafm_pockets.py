@@ -52,7 +52,9 @@ def get_pocket_embs():
 
         # fill in missing nodes with mean embedding
         if missing_nodes:
-            mean_emb = torch.mean(torch.stack(embs_list), dim=0)
+            print(f"embs_list={embs_list}")
+            tensor_embs_list = [torch.tensor(emb, dtype=torch.float32) for emb in embs_list if emb]
+            mean_emb = torch.mean(torch.stack(tensor_embs_list), dim=0)
             for node in missing_nodes:
                 pocket_embs[node] = mean_emb
         # finally dump
@@ -79,5 +81,5 @@ def get_relevant_chain_embs():
 
 if __name__ == "__main__":
     pass
-    # get_pocket_embs()
-    get_relevant_chain_embs()
+    get_pocket_embs()
+    # get_relevant_chain_embs()

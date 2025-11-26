@@ -4,7 +4,8 @@ from tqdm import tqdm
 import pandas as pd
 import networkx as nx
 from rnaglib.config import GRAPH_KEYS, TOOL
-from rnaglib.utils import graph_from_pdbid, graph_io
+from rnaglib.utils import graph_io
+from rnaglib.data_loading import rna_from_pdbid
 from rnaglib.algorithms import graph_algos
 
 # This should work but sometimes has missing nodes
@@ -96,7 +97,7 @@ for pocket in tqdm(os.listdir(old_path)):
     expanded_pocket_path = os.path.join(expanded_path, pocket)
 
     pdb_id = pocket[:4].lower()
-    rglib_graph = graph_from_pdbid(pdb_id, redundancy='all')
+    rglib_graph = rna_from_pdbid(pdb_id, redundancy='all')['rna']
     if rglib_graph is None:
         failed_set.add(pocket)
     old_pocket_graph = graph_io.load_json(old_pocket_path)

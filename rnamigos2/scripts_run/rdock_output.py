@@ -155,7 +155,8 @@ def run_virtual_screen_docking(systems, dataloader, score_to_use="INTER"):
 def get_dfs_rdock(test_systems, data_df, rognan=False):
     script_dir = os.path.dirname(__file__)
     rows, raw_rows = [], []
-    decoys = ["chembl", "pdb", "pdb_chembl"]
+    #decoys = ["chembl", "pdb", "pdb_chembl"]
+    decoys = ["pdb", "pdb_chembl"]
     loader_args = {
         "shuffle": False,
         "batch_size": 1,
@@ -165,7 +166,7 @@ def get_dfs_rdock(test_systems, data_df, rognan=False):
     for decoy_mode in decoys:
         print(f"Doing rDock inference and VS on {decoy_mode} decoys.")
         dataset = VirtualScreenDatasetDocking(
-            ligands_path=os.path.join(script_dir, "../data/ligand_db"),
+            ligands_path=os.path.join(script_dir, "../data/ligand_db_preprint"),
             systems=test_systems,
             decoy_mode=decoy_mode,
             group_ligands=True,
@@ -197,8 +198,8 @@ if __name__ == "__main__":
 
     # Setup dump dirs
     res_dir = "outputs/pockets"
-    # DECOY = 'pdb_chembl'
-    DECOY = 'chembl'
+    DECOY = 'pdb_chembl'
+    # DECOY = 'chembl'
     res_dir_quick = "outputs/pockets_quick_chembl" if DECOY == 'chembl' else "outputs/pockets_quick"
     os.makedirs(res_dir, exist_ok=True)
     os.makedirs(res_dir_quick, exist_ok=True)

@@ -14,6 +14,8 @@ from torch.utils.data import Dataset
 from rnamigos.learning.ligand_encoding import MolFPEncoder, MolGraphEncoder
 from rnamigos.utils.graph_utils import load_rna_graph
 
+from ablation_utils import guaranteed_derangement
+
 RDLogger.DisableLog("rdApp.*")  # disable warnings
 
 
@@ -362,16 +364,17 @@ class DockingDataset(Dataset):
 
 class VirtualScreenDataset(DockingDataset):
     def __init__(
-            self,
-            pockets_path,
-            ligands_path,
-            systems,
-            decoy_mode="pdb",
-            rognan=False,
-            reps_only=False,
-            group_ligands=True,
-            verbose=True,
-            **kwargs,
+        self,
+        pockets_path,
+        ligands_path,
+        systems,
+        decoy_mode="pdb",
+        rognan=False,
+        reps_only=False,
+        group_ligands=True,
+        disable_fix_points=False,
+        verbose=True,
+        **kwargs,
     ):
         super().__init__(pockets_path, systems=systems, shuffle=False, **kwargs)
         self.ligands_path = ligands_path
@@ -392,7 +395,10 @@ class VirtualScreenDataset(DockingDataset):
 
         if self.rognan:
             self.rognan_pockets_names = self.all_pockets_names.copy()
-            np.random.shuffle(self.rognan_pockets_names)
+            if disable_fix_points:
+                self.rognan_pockets_names = guaranteed_derangement(self.rognan_pockets_names)
+            else:
+                np.random.shuffle(self.rognan_pockets_names)
 
         if self.group_ligands:
             splits_file = os.path.join(script_dir, "../../data/train_test_75.p")
@@ -444,18 +450,22 @@ class VirtualScreenDataset(DockingDataset):
             if self.cache_graphs:
                 pocket_graph, _ = self.all_pockets[pocket_name]
             else:
+                print("enter the else")
                 pocket_graph, _ = load_rna_graph(
                     rna_path=os.path.join(self.pockets_path, f"{pocket_name}.json"),
                     undirected=self.undirected,
                     use_rings=False,
                     use_rnafm=self.use_rnafm,
                 )
+                print("escape the else")
             # Now we don't Rognan anymore for ligands
             pocket_name = self.all_pockets_names[idx]
             actives_smiles, decoys_smiles = self.get_ligands(pocket_name)
 
             # Remove empty cases
             if len(actives_smiles) == 0 or len(decoys_smiles) == 0:
+                print(f"len(actives_smiles)={len(actives_smiles)}")
+                print(f"len(decoy_smiles)={len(decoy_smiles)}")
                 return None, None, None, None, None
 
             all_smiles = actives_smiles + decoys_smiles
@@ -469,6 +479,7 @@ class VirtualScreenDataset(DockingDataset):
                 all_inputs = torch.tensor(all_inputs)
             return pocket_name, pocket_graph, all_inputs, torch.tensor(is_active), all_smiles
         except FileNotFoundError as e:
+            print(e)
             if self.verbose:
                 print(e)
             return None, None, None, None, None

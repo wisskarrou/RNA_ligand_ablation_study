@@ -35,8 +35,8 @@ names = list(name_runs.keys())
 runs = list(name_runs.values())
 
 # decoy_mode = 'pdb'
-decoy_mode = 'chembl'
-# decoy_mode = 'pdb_chembl'
+# decoy_mode = 'chembl'
+decoy_mode = 'pdb_chembl'
 grouped = True
 
 # Parse ef data for the runs and gather them in a big database

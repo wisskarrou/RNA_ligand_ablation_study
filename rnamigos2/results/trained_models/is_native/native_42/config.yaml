@@ -75,7 +75,7 @@ paths:
 data:
   pocket_graphs: data/json_pockets_expanded
   pretrain_graphs: data/pretrain_data/nr-graphs_annotated
-  ligand_db: data/ligand_db
+  ligand_db: data/ligand_db_preprint
   rnamigos1_test: false
   rnamigos1_only: false
   undirected: false

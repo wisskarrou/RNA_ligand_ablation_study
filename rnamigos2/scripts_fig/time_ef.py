@@ -31,7 +31,7 @@ def partial_virtual_screen(df, sort_up_to=0, score_column="rdock"):
 def build_auroc_df(out_csv="fig_script/time_auroc.csv", decoy="pdb_chembl", recompute=False):
     if not recompute and os.path.exists(out_csv):
         return
-    big_df_raw = pd.read_csv("outputs/pockets/big_df_grouped_42_raw.csv")
+    big_df_raw = pd.read_csv("outputs/pockets/big_df_42_raw.csv")
     big_df_raw = big_df_raw.loc[big_df_raw["decoys"] == decoy]
 
     big_df_raw = big_df_raw.sort_values(by=["pocket_id", "smiles"])
@@ -193,7 +193,10 @@ def line_plot_per_pocket(df, mixed_model="combined", robin=False):
     for pocket in df["pocket"].unique():
         model_res = []
         for model in all_models:
+            print(f"model:{model}")
             means, stds = get_means_stds(df, model, pocket_id=pocket)
+            print(f"means={means}")
+            print(f"stds={stds}")
             model_res.append((means, stds))
 
         # Set plot hparams
@@ -413,26 +416,27 @@ if __name__ == "__main__":
     # Build the time df for making the figures
     # recompute = False
     recompute = False
-    decoy_mode = "chembl"
-    # decoy_mode = 'pdb_chembl'
+    # decoy_mode = "chembl"
+    decoy_mode = 'pdb_chembl'
     # FOR A NICE PLOT, one should also choose the right scale in plot_utils
-    # out_csv = f'scripts_fig/time_auroc{"_chembl" if decoy_mode == "chembl" else ""}.csv'
-    # build_auroc_df(out_csv=out_csv, recompute=recompute, decoy=decoy_mode)
+    out_csv = f'scripts_fig/time_auroc{"_chembl" if decoy_mode == "chembl" else ""}.csv'
+    build_auroc_df(out_csv=out_csv, recompute=recompute, decoy=decoy_mode)
 
-    out_csv_robin = "scripts_fig/time_auroc_robin.csv"
-    # recompute = False
-    recompute = True
-    build_auroc_df_robin(out_csv=out_csv_robin, recompute=recompute)
+    # out_csv_robin = "scripts_fig/time_auroc_robin.csv"
+    # # recompute = False
+    # recompute = True
+    # build_auroc_df_robin(out_csv=out_csv_robin, recompute=recompute)
 
     # Then make plots
-    df = pd.read_csv(out_csv_robin, index_col=0)
+    df = pd.read_csv(out_csv, index_col=0)
     # mixed_model = "rnamigos_42"
     # mixed_model = "maxmerge_42"
-    mixed_model = "combined_42_max"
-    # mixed_model = "combined"
+    # mixed_model = "combined_42_max"
+    mixed_model = "combined_42"
     # mixed_model = 'dock'
     # line_plot(df, mixed_model=mixed_model, decoy_mode=decoy_mode)
-    line_plot_per_pocket(df, mixed_model=mixed_model, robin=True)
+    # line_plot_per_pocket(df, mixed_model=mixed_model, robin=True)
+    line_plot_per_pocket(df, mixed_model=mixed_model, robin=False)
     vax_plot(df, mixed_model=mixed_model, decoy_mode=decoy_mode)
 
     # df = pd.read_csv(out_csv_robin, index_col=0)

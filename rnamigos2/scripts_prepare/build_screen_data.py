@@ -7,7 +7,7 @@ import pandas as pd
 from loguru import logger
 from rdkit import Chem
 
-from scripts_prepare.decoy_finder import find_decoys
+from decoy_finder import find_decoys
 
 pocket_names = [
     "2GDI_Y_TPP_100",

@@ -23,12 +23,11 @@ def pdb_eval(cfg, model, dump=True, verbose=True, decoys=None, rognan=False, rep
     if verbose:
         logger.info(f"Loading VS graphs from {cfg.data.pocket_graphs}")
         logger.info(f"Loading VS ligands from {cfg.data.ligand_db}")
-
     test_systems = get_systems_from_cfg(cfg, return_test=True)
     model = model.to("cpu")
     rows_aurocs, rows_raws = [], []
     if decoys is None:
-        decoys = ["chembl", "pdb", "pdb_chembl", "decoy_finder"]
+        decoys = ["pdb", "pdb_chembl", "decoy_finder"]
     elif isinstance(decoys, str):
         decoys = [decoys]
     for decoy_mode in decoys:
@@ -41,9 +40,13 @@ def pdb_eval(cfg, model, dump=True, verbose=True, decoys=None, rognan=False, rep
             verbose=verbose,
             rognan=rognan,
         )
+        print(f"len(dataloader={len(dataloader)}")
+        print(f"dataset[0]={next(iter(dataloader))}")
         decoy_df_aurocs, decoys_dfs_raws = get_results_dfs(
             model=model, dataloader=dataloader, decoy_mode=decoy_mode, cfg=cfg, verbose=verbose
         )
+        print(f"decoy_df_raws={decoys_dfs_raws}")
+        print(f"decoy_df_aurocs={decoy_df_aurocs}")
         rows_aurocs.append(decoy_df_aurocs)
         rows_raws.append(decoys_dfs_raws)
 
@@ -59,12 +62,12 @@ def pdb_eval(cfg, model, dump=True, verbose=True, decoys=None, rognan=False, rep
         df_raw.to_csv(out_csv_raw, index=False)
 
         # Just printing the results
-        df_chembl = df_aurocs.loc[df_aurocs["decoys"] == "chembl"]
+        #df_chembl = df_aurocs.loc[df_aurocs["decoys"] == "chembl"]
         df_pdbchembl = df_aurocs.loc[df_aurocs["decoys"] == "pdb_chembl"]
-        df_chembl_grouped = group_df(df_chembl)
+        #df_chembl_grouped = group_df(df_chembl)
         df_pdbchembl_grouped = group_df(df_pdbchembl)
-        logger.info(f"{cfg.name} Mean AuROC on chembl: {np.mean(df_chembl['score'].values)}")
-        logger.info(f"{cfg.name} Mean grouped AuROC on chembl: {np.mean(df_chembl_grouped['score'].values)}")
+        #logger.info(f"{cfg.name} Mean AuROC on chembl: {np.mean(df_chembl['score'].values)}")
+        #logger.info(f"{cfg.name} Mean grouped AuROC on chembl: {np.mean(df_chembl_grouped['score'].values)}")
         logger.info(f"{cfg.name} Mean AuROC on pdbchembl: {np.mean(df_pdbchembl['score'].values)}")
         logger.info(f"{cfg.name} Mean grouped AuROC on pdbchembl: {np.mean(df_pdbchembl_grouped['score'].values)}")
     return df_aurocs, df_raw
@@ -87,6 +90,7 @@ def get_perf_model(models, res_dir, decoy_modes=("pdb", "chembl", "pdb_chembl"),
         out_csv_rognan = os.path.join(res_dir, f"{model_name}_rognan.csv")
         out_csv_raw_rognan = os.path.join(res_dir, f"{model_name}_rognan_raw.csv")
         if recompute or not os.path.exists(out_csv):
+            print("RECOMPUTE")
             for decoy_mode in decoy_modes:
                 # get model
                 full_model_path = os.path.join(model_dir, model_path)
@@ -95,6 +99,7 @@ def get_perf_model(models, res_dir, decoy_modes=("pdb", "chembl", "pdb_chembl"),
                 df_aurocs, df_raw = pdb_eval(
                     cfg, model, verbose=False, dump=False, decoys=decoy_mode, reps_only=reps_only
                 )
+                print(f"AUROCS:{df_aurocs}")
                 decoys_df_aurocs.append(df_aurocs)
                 decoys_df_raws.append(df_raw)
 
@@ -115,6 +120,7 @@ def get_perf_model(models, res_dir, decoy_modes=("pdb", "chembl", "pdb_chembl"),
             all_df_aurocs_rognan.to_csv(out_csv_rognan, index=False)
             all_df_raws_rognan.to_csv(out_csv_raw_rognan, index=False)
         else:
+            print("NOT RECOMPUTE")
             df_aurocs = pd.read_csv(out_csv)
             df_aurocs_rognan = pd.read_csv(out_csv_rognan)
 
@@ -151,7 +157,8 @@ def compute_mix_csvs(recompute=False):
         """
         Aggregate rdock, native and dock results add mixing strategies
         """
-        decoy_modes = ("pdb", "pdb_chembl", "chembl")
+        #decoy_modes = ("pdb", "pdb_chembl", "chembl")
+        decoy_modes = ("pdb", "pdb_chembl")
         all_big_raws = []
         for decoy in decoy_modes:
             raw_dfs = [pd.read_csv(f"outputs/pockets/{r}_raw.csv") for r in to_mix]
@@ -169,6 +176,8 @@ def compute_mix_csvs(recompute=False):
 
             big_df_raw = raw_dfs[1]
             big_df_raw = big_df_raw.merge(raw_dfs[2], on=["pocket_id", "smiles", "is_active"], how="inner")
+            print(f"big_raw_df={big_df_raw.head()}")
+            print(f"raw_dfs[0]={raw_dfs[0].head()}")
             big_df_raw = big_df_raw.merge(raw_dfs[0], on=["pocket_id", "smiles", "is_active"], how="inner")
             big_df_raw = big_df_raw[["pocket_id", "smiles", "is_active", "rdock", "dock", "native"]]
 
@@ -180,9 +189,11 @@ def compute_mix_csvs(recompute=False):
                                       use_max=True,
                                       add_decoy=False)[2]
 
+            print(big_df_raw.head())
             raw_df_docknat = smaller_merge(big_df_raw, "dock", "native", "docknat")
             big_df_raw = big_df_raw.merge(raw_df_docknat, on=["pocket_id", "smiles", "is_active"], how="outer")
 
+            print(big_df_raw.head())
             raw_df_rdocknat = smaller_merge(big_df_raw, "rdock", "native", "rdocknat")
             big_df_raw = big_df_raw.merge(raw_df_rdocknat, on=["pocket_id", "smiles", "is_active"], how="outer")
 
